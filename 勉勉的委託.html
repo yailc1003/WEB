@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>勉勉の委託事項紀錄</title>
+<style>
+  /* CSS 样式用于美化页面 */
+  body {
+  font-family: Arial, sans-serif;
+  margin: 20px;
+  background-color: #FFDDDD; /* 淡粉色背景 */
+}
+
+label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+input[type="text"],
+select {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+  border: 1px solid #d3a5c8; /* 淡紫色边框 */
+  border-radius: 20px; /* 圆角 */
+  box-sizing: border-box;
+}
+
+button {
+  background-color: #FFA5A5; /* 淡粉色按钮 */
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 20px; /* 圆角 */
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #B474BB; /* 深粉色按钮悬停状态 */
+}
+  #imagePreview {
+    margin-top: 20px;
+  }
+  #imagePreview img {
+    max-width: 200px; /* 调整图片最大宽度 */
+    max-height: 200px; /* 调整图片最大高度 */
+    margin-top: 10px;
+  }
+</style>
+</head>
+<body>
+
+<h2>勉勉の委託事項紀錄</h2>
+
+<!-- 输入表单 -->
+<form id="taskForm">
+  <label for="task">委託人</label>
+  <input type="text" id="task" name="task" required> 
+  <label for="task">備註</label>
+  <input type="text" id="tips" name="tips" required>
+  <label for="startDate">委託日期:</label>
+  <input type="date" id="startDate" name="startDate" required>
+  <label for="endDate">截止日期:</label>
+  <input type="date" id="endDate" name="endDate" required>
+  <label for="taskType">委託類型:</label>
+  <select id="taskType" name="taskType" required>
+    <option value="">選擇委託類型</option>
+    <option value="人物Q版立繪">人物Q版立繪</option>
+    <option value="人物正比立繪">人物正比立繪</option>
+	<option value="人物Q版大頭">人物Q版大頭</option>
+    <option value="人物正比大頭">人物正比大頭</option>
+    <option value="Q版小馬模板">Q版小馬模板</option>
+    <option value="小馬乖乖腳腳打開">小馬乖乖腳腳打開</option>
+	<option value="小馬全身立繪">小馬全身立繪</option>
+    <option value="小馬設計">小馬設計</option>
+	<option value="小馬半身">小馬半身</option>
+    <option value="人馬貼貼">人馬貼貼</option>
+	<option value="大插圖">大插圖</option>
+    <option value="其他">其他</option>
+    <!-- 其他委托类型选项 -->
+  </select>
+  <label for="image">上傳照片:</label>
+  <input type="file" id="image" name="image" accept="image/*">
+  <button type="button" onclick="addTask()">添加任務</button>
+</form>
+
+<!-- 任务列表 -->
+<ul id="taskList"></ul>
+
+<!-- 照片存放区域 -->
+<div id="imagePreview"></div>
+
+<script>
+// 加载之前保存的任务记录
+window.onload = function() {
+  var savedTasks = localStorage.getItem("tasks");
+  if (savedTasks) {
+    document.getElementById("taskList").innerHTML = savedTasks;
+  }
+};
+
+// 添加任务
+function addTask() {
+  var taskForm = document.getElementById("taskForm");
+  var taskList = document.getElementById("taskList");
+  var task = taskForm.task.value;
+  var startDate = taskForm.startDate.value;
+  var endDate = taskForm.endDate.value;
+  var taskType = taskForm.taskType.value;
+  var imageInput = taskForm.image;
+
+  // 获取上传的照片文件
+  var imageFile = imageInput.files[0];
+
+  // 创建任务项
+  var listItem = document.createElement("li");
+  listItem.innerHTML = `
+    <strong>${task}</strong> - ${startDate} 到 ${endDate} - ${taskType}
+    <button onclick="deleteTask(this)">删除</button>
+    <button onclick="moveUp(this)">上移</button>
+    <button onclick="moveDown(this)">下移</button>
+  `;
+  
+  // 将任务项添加到任务列表
+  taskList.appendChild(listItem);
+  
+  // 清空表单
+  taskForm.reset();
+
+  // 显示上传的照片
+  if (imageFile) {
+    var imagePreview = document.getElementById("imagePreview");
+    var imageElement = document.createElement("img");
+    imageElement.src = URL.createObjectURL(imageFile);
+    imagePreview.appendChild(imageElement);
+  }
+
+  // 保存任务记录到本地存储
+  localStorage.setItem("tasks", taskList.innerHTML);
+
+  // 上传照片到服务器
+  uploadImage(imageFile);
+}
+
+// 删除任务
+function deleteTask(button) {
+  var listItem = button.parentNode;
+  var taskList = listItem.parentNode;
+  taskList.removeChild(listItem);
+  // 更新本地存储的任务记录
+  localStorage.setItem("tasks", taskList.innerHTML);
+}
+
+// 上移任务
+function moveUp(button) {
+  var listItem = button.parentNode;
+  var previousItem = listItem.previousElementSibling;
+  if (previousItem) {
+    listItem.parentNode.insertBefore(listItem, previousItem);
+    // 更新本地存储的任务记录
+    localStorage.setItem("tasks", listItem.parentNode.innerHTML);
+  }
+}
+
+// 下移任务
+function moveDown(button) {
+  var listItem = button.parentNode;
+  var nextItem = listItem.nextElementSibling;
+  if (nextItem) {
+    listItem.parentNode.insertBefore(nextItem, listItem);
+    // 更新本地存储的任务记录
+    localStorage.setItem("tasks", listItem.parentNode.innerHTML);
+  }
+}
+
+// 上传照片到服务器
+function uploadImage(imageFile) {
+  if (!imageFile) return;
+
+  var formData = new FormData();
+  formData.append("image", imageFile);
+
+  // 发送 POST 请求到服务器处理照片上传
+  fetch("upload.php", {
+    method: "POST",
+    body: formData
+  })
+  .then(response => {
+    if (!response.ok) {
+      throw new Error("上传照片失败");
+    }
+    return response.text();
+  })
+  .then(data => {
+    console.log("照片上传成功:", data);
+  })
+  .catch(error => {
+    console.error("照片上传失败:", error.message);
+  });
+}
+</script>
+
+</body>
+</html>
